@@ -56,3 +56,19 @@ message AuthPayload{
 message AuthResponse{
   bool valid = 1;
 }
+
+
+## Keyclock Roles Description
+
+$ default Roles for Account created on Key clock
+
+"account": {
+  "roles": [
+    "manage-account",
+    "manage-account-links",
+    "view-profile"
+  ]
+}
+
+Create User on Keyclock
+
