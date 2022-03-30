@@ -23,6 +23,7 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.5.7",
     "@grpc/proto-loader": "^0.6.9",
+    "@keycloak/keycloak-admin-client": "^17.0.1",
     "@nestjs/common": "^8.0.0",
     "@nestjs/config": "^1.2.0",
     "@nestjs/core": "^8.0.0",
