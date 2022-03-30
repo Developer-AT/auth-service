@@ -1,4 +1,4 @@
-import { ClientType } from "src/interfaces/types";
+import { ClientType } from 'src/interfaces/types';
 
 export interface AuthPayload {
   token: string;

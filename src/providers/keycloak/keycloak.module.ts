@@ -6,7 +6,7 @@ import { KeycloakProvider } from './keycloak.provider';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [keycloakConfig]
+      load: [keycloakConfig],
     }),
   ],
   providers: [KeycloakProvider],

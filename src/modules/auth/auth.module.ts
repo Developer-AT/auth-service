@@ -5,10 +5,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot(),
-    KeyclockModule
-  ],
+  imports: [ConfigModule.forRoot(), KeyclockModule],
   controllers: [AuthController],
   providers: [AuthService],
 })
