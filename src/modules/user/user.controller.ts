@@ -9,8 +9,11 @@ export class UserController {
   constructor(private readonly userservice: UserService) {}
 
   @GrpcMethod('UserKeycloakService', 'CreateUser')
-  async CreateUser(payload: UserCreate, metadata: Metadata, call: ServerUnaryCall<any, any>){
+  async CreateUser(
+    payload: UserCreate,
+    metadata: Metadata,
+    call: ServerUnaryCall<any, any>,
+  ) {
     return await this.userservice.createUser(payload);
   }
-
 }

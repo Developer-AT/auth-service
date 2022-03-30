@@ -13,7 +13,11 @@ export class AuthService {
 
   async getToken(tokenPayload: TokenPayload): Promise<TokenResponse> {
     try {
-      return {token : await this.keycloak.generateUserToken(this.formatKeycloakTokenPayload(tokenPayload))}
+      return {
+        token: await this.keycloak.generateUserToken(
+          this.formatKeycloakTokenPayload(tokenPayload),
+        ),
+      };
     } catch (err) {
       console.log('Token Error :: ', err);
       return { token: '' };
