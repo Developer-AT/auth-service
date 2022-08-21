@@ -6,14 +6,14 @@ import { UserService } from './user.service';
 
 @Controller()
 export class UserController {
-  constructor(private readonly userservice: UserService) {}
+    constructor(private readonly userservice: UserService) {}
 
-  @GrpcMethod('UserKeycloakService', 'CreateUser')
-  async CreateUser(
-    payload: UserCreate,
-    metadata: Metadata,
-    call: ServerUnaryCall<any, any>,
-  ) {
-    return await this.userservice.createUser(payload);
-  }
+    @GrpcMethod('UserKeycloakService', 'CreateUser')
+    async CreateUser(
+        payload: UserCreate,
+        metadata: Metadata,
+        call: ServerUnaryCall<any, any>,
+    ) {
+        return await this.userservice.createUser(payload);
+    }
 }
