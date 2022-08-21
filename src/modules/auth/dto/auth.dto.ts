@@ -1,20 +1,20 @@
 import { ClientType } from 'src/interfaces/types';
 
 export interface AuthPayload {
-  token: string;
-  roles: Array<string>;
+    token: string;
+    roles: Array<string>;
 }
 
 export interface AuthResponse {
-  valid: boolean;
+    valid: boolean;
 }
 
 export interface TokenPayload {
-  username: string;
-  password: string;
-  client: ClientType;
+    username: string;
+    password: string;
+    client: ClientType;
 }
 
 export interface TokenResponse {
-  token: string;
+    token: string;
 }
