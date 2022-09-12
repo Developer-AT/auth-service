@@ -1,33 +1,33 @@
 import UserRepresentation from '@keycloak/keycloak-admin-client/lib/defs/userRepresentation';
 import { Injectable } from '@nestjs/common';
 import { KeycloakProvider } from 'src/providers/keycloak/keycloak.provider';
-import { UserCreate } from './dto/user.dto';
-import { UserRole } from 'src/interfaces/types';
+import { AdminCreate } from './dto/admin.dto';
+import { AdminRole } from 'src/interfaces/types';
 
 @Injectable()
-export class UserService {
+export class AdminService {
     constructor(private readonly keycloak: KeycloakProvider) {}
 
     /**
-     * @description Create User on Keycloak
-     * @param {UserCreate} user User Data
-     * @returns User's keycloak Id
+     * @description Create Admin on Keycloak
+     * @param {AdminCreate} admin Admin Data
+     * @returns Admin's keycloak Id
      */
-    async createUser(user: UserCreate) {
+    async createAdmin(admin: AdminCreate) {
         try {
             await this.keycloak.generateMasterToken();
             const kcUser = await this.keycloak.createUser(
-                this.formatUserCreate(user),
+                this.formatAdminCreate(admin),
             );
 
             const roleDetail = await this.keycloak.getClientRoleByName(
-                'user',
-                user.clientRole,
+                'admin',
+                admin.clientRole,
             );
 
             await this.keycloak.addClientLevelRoletoUser(
                 kcUser.id,
-                'user',
+                'admin',
                 this.keycloak.formatRoleMappingPayload([roleDetail]),
             );
             return { success: true, user: kcUser.id, msg: '' };
@@ -38,29 +38,29 @@ export class UserService {
     }
 
     /**
-     * @description Delete existing role of User and add new one
-     * @param {string} userId User's Keycloak Id
-     * @param {UserRole} roleName Role name that need to be added to user
+     * @description Delete existing role of Admin and add new one
+     * @param {string} adminId Admin's Keycloak Id
+     * @param {UserRole} roleName Role name that need to be added to admin
      * @returns return Success
      */
-    async updateUserRole(userId: string, roleName: UserRole) {
+    async updateAdminRole(adminId: string, roleName: AdminRole) {
         try {
             const roles = await this.keycloak.getUserClientLevelRoleById(
-                userId,
-                'user',
+                adminId,
+                'admin',
             );
             await this.keycloak.deleteUserClientLevelRole(
-                userId,
-                'user',
+                adminId,
+                'admin',
                 this.keycloak.formatRoleMappingPayload(roles),
             );
             const roleDetail = await this.keycloak.getClientRoleByName(
-                'user',
+                'admin',
                 roleName,
             );
             await this.keycloak.addClientLevelRoletoUser(
-                userId,
-                'user',
+                adminId,
+                'admin',
                 this.keycloak.formatRoleMappingPayload([roleDetail]),
             );
             return { success: true };
@@ -70,26 +70,21 @@ export class UserService {
         }
     }
 
-    async getUser() {
-        try {
-        } catch (error) {}
-    }
-
     /**
      * @description Create User Representation for keycloak from received User data
-     * @param {UserCreate} user User Data
+     * @param {AdminCreate} admin Admin's Data
      * @returns {UserRepresentation} keycloak User Representation
      */
-    formatUserCreate(user: UserCreate): UserRepresentation {
+    formatAdminCreate(admin: AdminCreate): UserRepresentation {
         return {
-            username: user.username,
-            email: user.email,
+            username: admin.username,
+            email: admin.email,
             enabled: true,
             emailVerified: true,
             credentials: [
                 {
                     type: 'password',
-                    value: user.password,
+                    value: admin.password,
                     temporary: false,
                 },
             ],
