@@ -18,9 +18,9 @@ export default () => ({
                 clientId: process.env.ADMIN_CLIENT_ID,
                 clientSecret: process.env.ADMIN_CLIENT_SECRET,
             },
-            clientId: {
-                user: process.env.USER_ID,
-                admin: process.env.ADMIN_ID,
+            clientObjectId: {
+                user: process.env.USER_CLIENT_OBJECT_ID,
+                admin: process.env.ADMIN_CLIENT_OBJECT_ID,
             },
         },
     },
