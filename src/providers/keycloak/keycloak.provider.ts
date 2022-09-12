@@ -23,85 +23,209 @@ export class KeycloakProvider {
         });
     }
 
+    /**
+     * @description Set Master Authentication Token to Keycloak Admin client
+     * @returns {void} Void
+     */
     async generateMasterToken(): Promise<void> {
-        await this.kcAdminClient.auth({
-            grantType: this.configService.get<GrantTypes>(
-                'keycloak.auth.master.grantType',
-            ),
-            clientId: this.configService.get<string>(
-                'keycloak.auth.master.clientId',
-            ),
-            clientSecret: this.configService.get<string>(
-                'keycloak.auth.master.clientSecret',
-            ),
-        });
+        try {
+            await this.kcAdminClient.auth({
+                grantType: this.configService.get<GrantTypes>(
+                    'keycloak.auth.master.grantType',
+                ),
+                clientId: this.configService.get<string>(
+                    'keycloak.auth.master.clientId',
+                ),
+                clientSecret: this.configService.get<string>(
+                    'keycloak.auth.master.clientSecret',
+                ),
+            });
+        } catch (error) {
+            return Promise.reject(error);
+        }
     }
 
+    /**
+     * @description Generate User Access Token if User's Credential is valid
+     * @param {Credentials} credentials Client Credential to Generate Token
+     * @returns {string} User Access Token
+     */
     async generateUserToken(credentials: Credentials): Promise<string> {
-        await this.kcAdminClient.auth(credentials);
-        return this.kcAdminClient.getAccessToken();
+        try {
+            await this.kcAdminClient.auth(credentials);
+            return this.kcAdminClient.getAccessToken();
+        } catch (error) {
+            return Promise.reject(error);
+        }
     }
 
+    /**
+     * @description Create User's Profile on Keycloak
+     * @param {UserRepresentation} user User's Data
+     * @returns User's Keycloack Id
+     */
     async createUser(user: UserRepresentation): Promise<{
         id: string;
     }> {
-        return await this.kcAdminClient.users.create(user);
+        try {
+            return await this.kcAdminClient.users.create(user);
+        } catch (error) {
+            return Promise.reject(error);
+        }
     }
 
+    /**
+     * @description Keycloak Client List related to Specific Realm
+     * Client: Entity on Keycloak used to distinguish User base
+     * ( eg. Admin linked to -> admin Client, User linked to -> user Client)
+     * @returns {ClientRepresentation} Keycloak Client Data
+     */
     async getClients(): Promise<ClientRepresentation[]> {
-        return await this.kcAdminClient.clients.find();
+        try {
+            return await this.kcAdminClient.clients.find();
+        } catch (error) {
+            return Promise.reject(error);
+        }
     }
 
+    /**
+     * @description Get Client Level Role Detail by its Name
+     * @param {ClientType} client Client name (admin | user)
+     * @param {string} role Role name and it should exist in Client
+     * @returns {RoleRepresentation} Role Detail
+     */
     async getClientRoleByName(
         client: ClientType,
         role: string,
     ): Promise<RoleRepresentation> {
-        return await this.kcAdminClient.clients.findRole({
-            id: this.getClientObjectId(client),
-            roleName: role,
-        });
+        try {
+            return await this.kcAdminClient.clients.findRole({
+                id: this.getClientObjectId(client),
+                roleName: role,
+            });
+        } catch (error) {
+            return Promise.reject(error);
+        }
     }
 
+    /**
+     * @description Get Realm level Role detail by its name
+     * @param {string} role Role Name
+     * @returns {RoleRepresentation} Role Detail
+     */
     async getRealmRoleByName(
         role: string,
     ): Promise<RoleRepresentation | undefined> {
-        return await this.kcAdminClient.roles.findOneByName({
-            name: role,
-        });
+        try {
+            return await this.kcAdminClient.roles.findOneByName({
+                name: role,
+            });
+        } catch (error) {
+            return Promise.reject(error);
+        }
     }
 
-    async roleMappingRealm(
+    /**
+     * @description Add Realm level Role to a User's Profile
+     * @param {string} userId Keycloak User Id
+     * @param {RoleMappingPayload} role Role Data
+     * @returns {void} Void
+     */
+    async addRealmLevelRoletoUser(
         userId: string,
         role: RoleMappingPayload[],
     ): Promise<void> {
-        return await this.kcAdminClient.users.addRealmRoleMappings({
-            id: userId,
-            roles: role,
-        });
+        try {
+            return await this.kcAdminClient.users.addRealmRoleMappings({
+                id: userId,
+                roles: role,
+            });
+        } catch (error) {
+            return Promise.reject(error);
+        }
     }
 
-    async roleMappingClient(
+    /**
+     * @desciption Add Client level Role to a User's Profile
+     * @param {string} userId Keycloak User's Id
+     * @param {ClientType} client Client Type (admin, user etc...)
+     * @param {RoleMappingPayload} role Role Detail
+     * @returns {void} Void
+     */
+    async addClientLevelRoletoUser(
         userId: string,
         client: ClientType,
         role: RoleMappingPayload[],
     ): Promise<void> {
-        return await this.kcAdminClient.users.addClientRoleMappings({
-            id: userId,
-            clientUniqueId: this.getClientObjectId(client),
-            roles: role,
-        });
+        try {
+            return await this.kcAdminClient.users.addClientRoleMappings({
+                id: userId,
+                clientUniqueId: this.getClientObjectId(client),
+                roles: role,
+            });
+        } catch (error) {
+            return Promise.reject(error);
+        }
     }
 
+    /**
+     * @description Fetch User's Client Level Role
+     * @param {string} userId Keycloak User's Id
+     * @param {ClientType} client Client Type (admin, user etc...)
+     * @returns {RoleRepresentation[]} Roles Associated to User
+     */
+    async getUserClientLevelRoleById(
+        userId: string,
+        client: ClientType,
+    ): Promise<RoleRepresentation[]> {
+        try {
+            return await this.kcAdminClient.users.listClientRoleMappings({
+                id: userId,
+                clientUniqueId: this.getClientObjectId(client),
+            });
+        } catch (error) {
+            return Promise.reject(error);
+        }
+    }
+
+    /**
+     * @description Delete associated roles of user
+     * @param {string} userId Keycloak User's Id
+     * @param {ClientType} client Client Type (admin, user etc...)
+     * @param {RoleMappingPayload[]} roles Roles Data need to be deleted
+     * @returns {void} Void
+     */
+    async deleteUserClientLevelRole(
+        userId: string,
+        client: ClientType,
+        roles: RoleMappingPayload[],
+    ): Promise<void> {
+        try {
+            return await this.kcAdminClient.users.delClientRoleMappings({
+                id: userId,
+                clientUniqueId: this.getClientObjectId(client),
+                roles: roles,
+            });
+        } catch (error) {
+            return Promise.reject(error);
+        }
+    }
+
+    /**
+     * @description Fetch Keycloak Client Object Id by Client Id (Name)
+     * @param {string} client Client Type (admin, user etc...)
+     * @returns {string} Client Keycloak Object Id
+     */
     getClientObjectId(client: ClientType): string {
         switch (client) {
             case 'admin':
                 return this.configService.get<string>(
-                    'keycloak.auth.clientId.admin',
+                    'keycloak.auth.clientObjectId.admin',
                 );
 
             case 'user':
                 return this.configService.get<string>(
-                    'keycloak.auth.clientId.user',
+                    'keycloak.auth.clientObjectId.user',
                 );
 
             default:
@@ -109,6 +233,11 @@ export class KeycloakProvider {
         }
     }
 
+    /**
+     * @description Fetch Client Auth Credential by Client Id(Name)
+     * @param {string} client Client Type (admin, user etc...)
+     * @returns {Credentials} Client Credentials
+     */
     getAuthCredForToken(client: ClientType): Credentials {
         switch (client) {
             case 'admin':
@@ -126,5 +255,21 @@ export class KeycloakProvider {
                     'keycloak.auth.master',
                 );
         }
+    }
+
+    /**
+     * @description Convert keycloak RoleRepresentation to RoleMappingPayload
+     * @param {RoleRepresentation[]} roles RoleRepresentation of keycloak
+     * @returns {RoleMappingPayload[]} RoleMapping Payload for Keycloak role operations
+     */
+    formatRoleMappingPayload(
+        roles: RoleRepresentation[],
+    ): RoleMappingPayload[] {
+        return roles.map((role) => {
+            return {
+                id: role.id,
+                name: role.name,
+            };
+        });
     }
 }
