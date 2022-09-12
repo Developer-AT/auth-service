@@ -8,7 +8,7 @@ import { UserService } from './user.service';
 export class UserController {
     constructor(private readonly userservice: UserService) {}
 
-    @GrpcMethod('UserKeycloakService', 'CreateUser')
+    @GrpcMethod('UserService', 'CreateUser')
     async CreateUser(
         payload: UserCreate,
         metadata: Metadata,

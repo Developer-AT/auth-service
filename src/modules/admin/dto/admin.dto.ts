@@ -1,4 +1,4 @@
-export interface UserCreate {
+export interface AdminCreate {
     username: string;
     password: string;
     email: string;
