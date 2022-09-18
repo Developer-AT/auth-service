@@ -2,7 +2,7 @@ import UserRepresentation from '@keycloak/keycloak-admin-client/lib/defs/userRep
 import { Injectable } from '@nestjs/common';
 import { KeycloakProvider } from 'src/providers/keycloak/keycloak.provider';
 import { UserCreate } from './dto/user.dto';
-import { UserRole } from 'src/interfaces/types';
+import { UserRole, ClientType } from 'src/interfaces/enums';
 
 @Injectable()
 export class UserService {
@@ -21,19 +21,18 @@ export class UserService {
             );
 
             const roleDetail = await this.keycloak.getClientRoleByName(
-                'user',
+                ClientType.USER,
                 user.clientRole,
             );
 
             await this.keycloak.addClientLevelRoletoUser(
                 kcUser.id,
-                'user',
+                ClientType.USER,
                 this.keycloak.formatRoleMappingPayload([roleDetail]),
             );
-            return { success: true, user: kcUser.id, msg: '' };
+            return kcUser;
         } catch (error) {
-            console.log(error);
-            return Promise.reject(error);
+            throw error;
         }
     }
 
@@ -41,32 +40,31 @@ export class UserService {
      * @description Delete existing role of User and add new one
      * @param {string} userId User's Keycloak Id
      * @param {UserRole} roleName Role name that need to be added to user
-     * @returns return Success
+     * @returns {void} Void
      */
     async updateUserRole(userId: string, roleName: UserRole) {
         try {
+            await this.keycloak.generateMasterToken();
             const roles = await this.keycloak.getUserClientLevelRoleById(
                 userId,
-                'user',
+                ClientType.USER,
             );
             await this.keycloak.deleteUserClientLevelRole(
                 userId,
-                'user',
+                ClientType.USER,
                 this.keycloak.formatRoleMappingPayload(roles),
             );
             const roleDetail = await this.keycloak.getClientRoleByName(
-                'user',
+                ClientType.USER,
                 roleName,
             );
             await this.keycloak.addClientLevelRoletoUser(
                 userId,
-                'user',
+                ClientType.USER,
                 this.keycloak.formatRoleMappingPayload([roleDetail]),
             );
-            return { success: true };
         } catch (error) {
-            console.log(error);
-            return Promise.reject(error);
+            throw error
         }
     }
 

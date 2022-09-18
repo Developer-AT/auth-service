@@ -1,3 +1,4 @@
+import { HttpResponse } from 'src/interfaces/global.interface';
 import { AuthService } from './auth.service';
 import { Controller } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
@@ -8,10 +9,14 @@ import {
     TokenPayload,
     TokenResponse,
 } from './dto/auth.dto';
+import { GlobalUtilsProvider } from 'src/providers/utils/global.utils.provider';
 
 @Controller()
 export class AuthController {
-    constructor(private readonly authservice: AuthService) {}
+    constructor(
+        private readonly authservice: AuthService,
+        private readonly globalUtils: GlobalUtilsProvider,
+    ) {}
 
     @GrpcMethod('AuthService', 'Validate')
     Validate(
@@ -27,7 +32,27 @@ export class AuthController {
         payload: TokenPayload,
         metadata: Metadata,
         call: ServerUnaryCall<any, any>,
-    ): Promise<TokenResponse> {
-        return await this.authservice.getToken(payload);
+    ): Promise<HttpResponse> {
+        try {
+            const response = await this.authservice.getToken(payload);
+            return this.globalUtils.successResponse(response);
+        } catch (error) {
+            return this.globalUtils.GRpcErrorResponse(error);
+        }
+    }
+
+    @GrpcMethod('AuthService', 'AuthMicroserviceServiceToken')
+    async AuthMicroserviceServiceToken(
+        payload: TokenPayload,
+        metadata: Metadata,
+        call: ServerUnaryCall<any, any>,
+    ) {
+        try {
+            return this.globalUtils.successResponse({
+                token: await this.authservice.authMicroserviceServiceToken(),
+            });
+        } catch (error) {
+            return this.globalUtils.GRpcErrorResponse(error);
+        }
     }
 }
