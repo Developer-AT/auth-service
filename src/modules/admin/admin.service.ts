@@ -2,7 +2,7 @@ import UserRepresentation from '@keycloak/keycloak-admin-client/lib/defs/userRep
 import { Injectable } from '@nestjs/common';
 import { KeycloakProvider } from 'src/providers/keycloak/keycloak.provider';
 import { AdminCreate } from './dto/admin.dto';
-import { AdminRole } from 'src/interfaces/types';
+import { AdminRole, ClientType } from 'src/interfaces/enums';
 
 @Injectable()
 export class AdminService {
@@ -21,13 +21,13 @@ export class AdminService {
             );
 
             const roleDetail = await this.keycloak.getClientRoleByName(
-                'admin',
+                ClientType.ADMIN,
                 admin.clientRole,
             );
 
             await this.keycloak.addClientLevelRoletoUser(
                 kcUser.id,
-                'admin',
+                ClientType.ADMIN,
                 this.keycloak.formatRoleMappingPayload([roleDetail]),
             );
             return { success: true, user: kcUser.id, msg: '' };
@@ -40,27 +40,27 @@ export class AdminService {
     /**
      * @description Delete existing role of Admin and add new one
      * @param {string} adminId Admin's Keycloak Id
-     * @param {UserRole} roleName Role name that need to be added to admin
+     * @param {AdminRole} roleName Role name that need to be added to admin
      * @returns return Success
      */
     async updateAdminRole(adminId: string, roleName: AdminRole) {
         try {
             const roles = await this.keycloak.getUserClientLevelRoleById(
                 adminId,
-                'admin',
+                ClientType.ADMIN,
             );
             await this.keycloak.deleteUserClientLevelRole(
                 adminId,
-                'admin',
+                ClientType.ADMIN,
                 this.keycloak.formatRoleMappingPayload(roles),
             );
             const roleDetail = await this.keycloak.getClientRoleByName(
-                'admin',
+                ClientType.ADMIN,
                 roleName,
             );
             await this.keycloak.addClientLevelRoletoUser(
                 adminId,
-                'admin',
+                ClientType.ADMIN,
                 this.keycloak.formatRoleMappingPayload([roleDetail]),
             );
             return { success: true };

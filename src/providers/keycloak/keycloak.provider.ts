@@ -1,5 +1,6 @@
+import { KeyClockException } from './../../handlers/exceptions/keyclock.exception';
 import { ConfigService } from '@nestjs/config';
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import KcAdminClient from '@keycloak/keycloak-admin-client';
 import UserRepresentation from '@keycloak/keycloak-admin-client/lib/defs/userRepresentation';
 import RoleRepresentation, {
@@ -10,7 +11,7 @@ import {
     Credentials,
     GrantTypes,
 } from '@keycloak/keycloak-admin-client/lib/utils/auth';
-import { ClientType } from 'src/interfaces/types';
+import { ClientType } from 'src/interfaces/enums';
 
 @Injectable()
 export class KeycloakProvider {
@@ -41,7 +42,7 @@ export class KeycloakProvider {
                 ),
             });
         } catch (error) {
-            return Promise.reject(error);
+            throw new KeyClockException(error);
         }
     }
 
@@ -55,7 +56,7 @@ export class KeycloakProvider {
             await this.kcAdminClient.auth(credentials);
             return this.kcAdminClient.getAccessToken();
         } catch (error) {
-            return Promise.reject(error);
+            throw new KeyClockException(error);
         }
     }
 
@@ -70,7 +71,7 @@ export class KeycloakProvider {
         try {
             return await this.kcAdminClient.users.create(user);
         } catch (error) {
-            return Promise.reject(error);
+            throw new KeyClockException(error);
         }
     }
 
@@ -84,7 +85,7 @@ export class KeycloakProvider {
         try {
             return await this.kcAdminClient.clients.find();
         } catch (error) {
-            return Promise.reject(error);
+            throw new KeyClockException(error);
         }
     }
 
@@ -104,7 +105,7 @@ export class KeycloakProvider {
                 roleName: role,
             });
         } catch (error) {
-            return Promise.reject(error);
+            throw new KeyClockException(error);
         }
     }
 
@@ -121,7 +122,7 @@ export class KeycloakProvider {
                 name: role,
             });
         } catch (error) {
-            return Promise.reject(error);
+            throw new KeyClockException(error);
         }
     }
 
@@ -141,7 +142,7 @@ export class KeycloakProvider {
                 roles: role,
             });
         } catch (error) {
-            return Promise.reject(error);
+            throw new KeyClockException(error);
         }
     }
 
@@ -164,7 +165,7 @@ export class KeycloakProvider {
                 roles: role,
             });
         } catch (error) {
-            return Promise.reject(error);
+            throw new KeyClockException(error);
         }
     }
 
@@ -184,7 +185,7 @@ export class KeycloakProvider {
                 clientUniqueId: this.getClientObjectId(client),
             });
         } catch (error) {
-            return Promise.reject(error);
+            throw new KeyClockException(error);
         }
     }
 
@@ -207,7 +208,7 @@ export class KeycloakProvider {
                 roles: roles,
             });
         } catch (error) {
-            return Promise.reject(error);
+            throw new KeyClockException(error);
         }
     }
 
@@ -218,12 +219,12 @@ export class KeycloakProvider {
      */
     getClientObjectId(client: ClientType): string {
         switch (client) {
-            case 'admin':
+            case ClientType.ADMIN:
                 return this.configService.get<string>(
                     'keycloak.auth.clientObjectId.admin',
                 );
 
-            case 'user':
+            case ClientType.USER:
                 return this.configService.get<string>(
                     'keycloak.auth.clientObjectId.user',
                 );
@@ -240,12 +241,12 @@ export class KeycloakProvider {
      */
     getAuthCredForToken(client: ClientType): Credentials {
         switch (client) {
-            case 'admin':
+            case ClientType.ADMIN:
                 return this.configService.get<Credentials>(
                     'keycloak.auth.admin',
                 );
 
-            case 'user':
+            case ClientType.USER:
                 return this.configService.get<Credentials>(
                     'keycloak.auth.user',
                 );

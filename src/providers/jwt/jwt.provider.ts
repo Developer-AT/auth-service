@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import {
     SignOptions,
     sign,
@@ -6,10 +6,13 @@ import {
     verify,
     VerifyOptions,
     Algorithm,
+    Jwt,
 } from 'jsonwebtoken';
 import { readFileSync } from 'fs';
 import { ConfigService } from '@nestjs/config';
-import { ServiceType } from 'src/interfaces/types';
+import { ServiceType } from 'src/interfaces/enums';
+import { join } from 'path';
+import { JwtException } from 'src/handlers/exceptions/jwt.exception';
 
 @Injectable()
 export class JwtProvider {
@@ -24,7 +27,13 @@ export class JwtProvider {
      * @param payload Data Need to Encrypt
      */
     setPayload(payload: { [key: string]: any }) {
-        this.payload = JSON.stringify(payload);
+        this.payload = JSON.stringify({
+            ...payload,
+            service: ServiceType.USER,
+            expiresIn:
+                new Date().getTime() +
+                this.configService.get<number>('service.ttl'),
+        });
     }
 
     /**
@@ -33,9 +42,6 @@ export class JwtProvider {
     private setSignOptions() {
         this.signOptions = {
             algorithm: this.configService.get<Algorithm>('service.algo'),
-            expiresIn:
-                new Date().getTime() +
-                this.configService.get<number>('service.ttl'),
         };
     }
 
@@ -43,10 +49,11 @@ export class JwtProvider {
      * @description Read and Set private key of Auth Service
      */
     private setSecretKey() {
-        this.privateKey = readFileSync(
+        const path = join(
+            __dirname,
             this.configService.get<string>('service.keys.private.auth'),
-            'utf8',
         );
+        this.privateKey = readFileSync(path, 'utf8');
     }
 
     /**
@@ -59,7 +66,7 @@ export class JwtProvider {
             this.setSecretKey();
             return sign(this.payload, this.privateKey, this.signOptions);
         } catch (error) {
-            Promise.reject(error);
+            throw new JwtException(error);
         }
     }
 
@@ -78,15 +85,15 @@ export class JwtProvider {
      * @description Verify the JWT token by token origin(Service Type)
      * @param {ServiceType} serviceType To identify the token origin
      * @param {string} token JWT Token
-     * @returns {Jwt | JwtPayload} Decode Token
+     * @returns {Jwt} Decode Token
      */
-    verifyToken(serviceType: ServiceType, token: string) {
+    async verifyToken(serviceType: ServiceType, token: string) {
         try {
             this.setVerifyOptions();
             const publicKey = this.fetchPublicKeyByServiceType(serviceType);
-            return verify(token, publicKey, this.verifyOptions);
+            return <Jwt>verify(token, publicKey, this.verifyOptions);
         } catch (error) {
-            Promise.reject(error);
+            throw new JwtException(error);
         }
     }
 
@@ -96,30 +103,30 @@ export class JwtProvider {
      * @returns Public Key
      */
     private fetchPublicKeyByServiceType(serviceType: ServiceType) {
-        let key;
-        switch (serviceType) {
-            case 'auth':
-                key = this.configService.get<string>(
-                    'service.keys.public.auth',
-                );
-                break;
+        try {
+            let key;
+            switch (serviceType) {
+                case ServiceType.AUTH:
+                    key = this.configService.get<string>(
+                        'service.keys.public.auth',
+                    );
+                    break;
 
-            case 'book':
-                key = this.configService.get<string>(
-                    'service.keys.public.book',
-                );
-                break;
+                case ServiceType.BOOK:
+                    key = this.configService.get<string>(
+                        'service.keys.public.book',
+                    );
+                    break;
 
-            case 'user':
-                key = this.configService.get<string>(
-                    'service.keys.public.user',
-                );
-                break;
-
-            default:
-                Promise.reject('Invalid Service Type');
-                break;
+                case ServiceType.USER:
+                    key = this.configService.get<string>(
+                        'service.keys.public.user',
+                    );
+                    break;
+            }
+            return readFileSync(join(__dirname, key), 'utf8');
+        } catch (error) {
+            throw new JwtException(error);
         }
-        return key;
     }
 }

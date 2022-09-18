@@ -2,10 +2,14 @@ import { Credentials } from '@keycloak/keycloak-admin-client/lib/utils/auth';
 import { Injectable } from '@nestjs/common';
 import { KeycloakProvider } from 'src/providers/keycloak/keycloak.provider';
 import { AuthResponse, TokenPayload, TokenResponse } from './dto/auth.dto';
+import { JwtProvider } from './../../providers/jwt/jwt.provider';
 
 @Injectable()
 export class AuthService {
-    constructor(private readonly keycloak: KeycloakProvider) {}
+    constructor(
+        private readonly keycloak: KeycloakProvider,
+        private readonly jwt: JwtProvider,
+    ) {}
     validate(data): AuthResponse {
         console.log(data);
         return { valid: true };
@@ -30,5 +34,18 @@ export class AuthService {
             username: tokenPayload.username,
             password: tokenPayload.password,
         });
+    }
+
+    /**
+     * @description Genearte Token for Auth Microservice
+     * @returns {string} Bearer Token for Auth Microservice
+     */
+    async authMicroserviceServiceToken(): Promise<string> {
+        try {
+            this.jwt.setPayload({});
+            return this.jwt.signPayload();
+        } catch (error) {
+            throw error;
+        }
     }
 }
