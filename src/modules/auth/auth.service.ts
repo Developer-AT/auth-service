@@ -1,8 +1,9 @@
-import { Credentials } from '@keycloak/keycloak-admin-client/lib/utils/auth';
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { KeycloakProvider } from 'src/providers/keycloak/keycloak.provider';
-import { AuthResponse, TokenPayload, TokenResponse } from './dto/auth.dto';
+import { AuthResponse, AuthPayload } from './dto/auth.dto';
 import { JwtProvider } from './../../providers/jwt/jwt.provider';
+import { JwtPayload } from 'jsonwebtoken';
+import { ClientType } from 'src/interfaces/enums';
 
 @Injectable()
 export class AuthService {
@@ -10,30 +11,43 @@ export class AuthService {
         private readonly keycloak: KeycloakProvider,
         private readonly jwt: JwtProvider,
     ) {}
-    validate(data): AuthResponse {
-        console.log(data);
-        return { valid: true };
-    }
-
-    async getToken(tokenPayload: TokenPayload): Promise<TokenResponse> {
+    async validate(data: AuthPayload) {
         try {
-            return {
-                token: await this.keycloak.generateUserToken(
-                    this.formatKeycloakTokenPayload(tokenPayload),
-                ),
-            };
-        } catch (err) {
-            console.log('Token Error :: ', err);
-            return { token: '' };
-        }
-    }
+            const decodedToken = await this.jwt.decodeToken(data.token);
+            if (
+                !this.isTokenContainRequiredInfo(decodedToken, data.clientType)
+            ) {
+                throw new HttpException(
+                    'Invalid Auth Startegy',
+                    HttpStatus.UNAUTHORIZED,
+                );
+            }
+            if (decodedToken.typ != 'Bearer') {
+                throw new HttpException(
+                    'Invalid Auth Startegy',
+                    HttpStatus.UNAUTHORIZED,
+                );
+            }
 
-    formatKeycloakTokenPayload(tokenPayload: TokenPayload): Credentials {
-        const config = this.keycloak.getAuthCredForToken(tokenPayload.client);
-        return Object.assign(config, {
-            username: tokenPayload.username,
-            password: tokenPayload.password,
-        });
+            const userId = decodedToken.sub;
+            // Find User in db
+
+            const roles: string[] =
+                decodedToken.resource_access[data.clientType].roles;
+            if (
+                roles.length < 1 ||
+                !this.isUserHasValidRole(roles, data.roles)
+            ) {
+                throw new HttpException(
+                    'Access not Allowed',
+                    HttpStatus.FORBIDDEN,
+                );
+            }
+
+            return userId;
+        } catch (error) {
+            throw error;
+        }
     }
 
     /**
@@ -47,5 +61,40 @@ export class AuthService {
         } catch (error) {
             throw error;
         }
+    }
+
+    /**
+     * Validate is Jwt Token contain required info or not
+     * @param {JwtPayload} token Decoded Token
+     * @param {ClientType} clientType To identfy- Token is for User or Admin
+     * @returns {boolean} Boolean
+     */
+    private isTokenContainRequiredInfo(
+        token: JwtPayload,
+        clientType: ClientType,
+    ): boolean {
+        return Boolean(
+            token.typ &&
+                token.sub &&
+                token.resource_access &&
+                token.resource_access[clientType] &&
+                token.resource_access[clientType].roles,
+        );
+    }
+
+    /**
+     * @description Validate User conatins valid access roles or not
+     * @param {string[]} userRole Roles Associated to user
+     * @param {string[]} roleRequired Roles required on user
+     * @returns {boolean} Boolean
+     */
+    async isUserHasValidRole(userRole: string[], roleRequired: string[]) {
+        let roleExist: boolean = false;
+        roleRequired.forEach((role) => {
+            if (userRole.indexOf(role) > -1) {
+                roleExist = true;
+            }
+        });
+        return roleExist;
     }
 }

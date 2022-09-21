@@ -1,8 +1,9 @@
 import UserRepresentation from '@keycloak/keycloak-admin-client/lib/defs/userRepresentation';
 import { Injectable } from '@nestjs/common';
 import { KeycloakProvider } from 'src/providers/keycloak/keycloak.provider';
-import { UserCreate } from './dto/user.dto';
+import { UserCreate, GenerateToken } from './dto/user.dto';
 import { UserRole, ClientType } from 'src/interfaces/enums';
+import { Credentials } from '@keycloak/keycloak-admin-client/lib/utils/auth';
 
 @Injectable()
 export class UserService {
@@ -64,7 +65,29 @@ export class UserService {
                 this.keycloak.formatRoleMappingPayload([roleDetail]),
             );
         } catch (error) {
-            throw error
+            throw error;
+        }
+    }
+
+    /**
+     * @description Generate Bearer Token by Username and Password
+     * @param {GenerateToken} payload Data to Generate User Token
+     * @returns User Bearer Token
+     */
+    async generateToken(payload: GenerateToken) {
+        try {
+            const authCredForToken = this.keycloak.getAuthCredForToken(
+                ClientType.USER,
+            );
+            const dataForToken: Credentials = {
+                username: payload.username,
+                password: payload.password,
+                ...authCredForToken,
+            };
+
+            return await this.keycloak.generateUserToken(dataForToken);
+        } catch (error) {
+            throw error;
         }
     }
 

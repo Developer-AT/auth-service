@@ -6,6 +6,8 @@ interface Response {
     timestamp: string;
 }
 
+export interface Empty {}
+
 export interface GRpcResponse extends Response {
     data: string;
     error: string;

@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
     SignOptions,
     sign,
@@ -7,6 +7,9 @@ import {
     VerifyOptions,
     Algorithm,
     Jwt,
+    DecodeOptions,
+    decode,
+    JwtPayload,
 } from 'jsonwebtoken';
 import { readFileSync } from 'fs';
 import { ConfigService } from '@nestjs/config';
@@ -26,7 +29,7 @@ export class JwtProvider {
      * @description Convert Data Object to string
      * @param payload Data Need to Encrypt
      */
-    setPayload(payload: { [key: string]: any }) {
+    setPayload(payload: { [key: string]: any }): void {
         this.payload = JSON.stringify({
             ...payload,
             service: ServiceType.USER,
@@ -39,7 +42,7 @@ export class JwtProvider {
     /**
      * @description Set Token Signature related Detail
      */
-    private setSignOptions() {
+    private setSignOptions(): void {
         this.signOptions = {
             algorithm: this.configService.get<Algorithm>('service.algo'),
         };
@@ -48,7 +51,7 @@ export class JwtProvider {
     /**
      * @description Read and Set private key of Auth Service
      */
-    private setSecretKey() {
+    private setSecretKey(): void {
         const path = join(
             __dirname,
             this.configService.get<string>('service.keys.private.auth'),
@@ -60,7 +63,7 @@ export class JwtProvider {
      * @description Encrypt Payload Data
      * @returns {string} Encrypted Data
      */
-    signPayload() {
+    signPayload(): string {
         try {
             this.setSignOptions();
             this.setSecretKey();
@@ -73,7 +76,7 @@ export class JwtProvider {
     /**
      * @description Set Requirements To verify Encrypted Data
      */
-    private setVerifyOptions() {
+    private setVerifyOptions(): void {
         this.verifyOptions = {
             algorithms: [this.configService.get<Algorithm>('service.algo')],
             ignoreExpiration: false,
@@ -87,11 +90,27 @@ export class JwtProvider {
      * @param {string} token JWT Token
      * @returns {Jwt} Decode Token
      */
-    async verifyToken(serviceType: ServiceType, token: string) {
+    async verifyToken(serviceType: ServiceType, token: string): Promise<Jwt> {
         try {
             this.setVerifyOptions();
             const publicKey = this.fetchPublicKeyByServiceType(serviceType);
             return <Jwt>verify(token, publicKey, this.verifyOptions);
+        } catch (error) {
+            throw new JwtException(error);
+        }
+    }
+
+    /**
+     * @description Decode JWT token without Verification of Signature
+     * @param {string} token JWT token
+     * @returns {JwtPayload} Decoded Token
+     */
+    async decodeToken(token: string): Promise<JwtPayload> {
+        try {
+            const decodeOptions: DecodeOptions = {
+                json: true,
+            };
+            return <JwtPayload>decode(token, decodeOptions);
         } catch (error) {
             throw new JwtException(error);
         }
@@ -104,7 +123,7 @@ export class JwtProvider {
      */
     private fetchPublicKeyByServiceType(serviceType: ServiceType) {
         try {
-            let key;
+            let key: string;
             switch (serviceType) {
                 case ServiceType.AUTH:
                     key = this.configService.get<string>(
