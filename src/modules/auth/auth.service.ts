@@ -1,6 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { KeycloakProvider } from 'src/providers/keycloak/keycloak.provider';
-import { AuthResponse, AuthPayload } from './dto/auth.dto';
+import { AuthPayload } from './dto/auth.dto';
 import { JwtProvider } from './../../providers/jwt/jwt.provider';
 import { JwtPayload } from 'jsonwebtoken';
 import { ClientType } from 'src/interfaces/enums';
@@ -29,9 +29,6 @@ export class AuthService {
                 );
             }
 
-            const userId = decodedToken.sub;
-            // Find User in db
-
             const roles: string[] =
                 decodedToken.resource_access[data.clientType].roles;
             if (
@@ -44,6 +41,7 @@ export class AuthService {
                 );
             }
 
+            const userId = decodedToken.sub;
             return userId;
         } catch (error) {
             throw error;
