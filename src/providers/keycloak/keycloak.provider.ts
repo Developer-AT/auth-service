@@ -56,6 +56,7 @@ export class KeycloakProvider {
             await this.kcAdminClient.auth(credentials);
             return this.kcAdminClient.getAccessToken();
         } catch (error) {
+            console.error('Keyclock--generateUserToken--Error--', error);
             throw new KeyClockException(error);
         }
     }

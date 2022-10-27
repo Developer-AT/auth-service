@@ -87,6 +87,7 @@ export class UserService {
 
             return await this.keycloak.generateUserToken(dataForToken);
         } catch (error) {
+            console.error('User--generateToken--Error--', error);
             throw error;
         }
     }

@@ -67,6 +67,7 @@ export class UserController {
                 token: token,
             });
         } catch (error) {
+            console.error('User--GenerateToken--Error--', error);
             return this.globalUtils.GRpcErrorResponse(error);
         }
     }

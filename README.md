@@ -72,3 +72,6 @@ $ default Roles for Account created on Key clock
 
 Create User on Keyclock
 
+docker run -d -p 5000:5000 --network=microservice --name=auth-service 2551682dc2c9
+
+docker logs --follow 
