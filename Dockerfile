@@ -14,6 +14,8 @@ ADD https://www.dropbox.com/s/cbty381h707x1ki/user.proto?dl=1 ./proto/user.proto
 
 WORKDIR /app
 
+RUN npm install pm2 -g
+
 COPY package*.json ./
 
 RUN npm install
@@ -48,4 +50,4 @@ ENV PUBLIC_KEY_BOOK='./../../../../../keys/public/book.service.public.key'
 
 EXPOSE 5000
 
-CMD [ "npm", "start" ]
+CMD [ "npm", "start:dev" ]

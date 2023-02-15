@@ -1,8 +1,8 @@
 import UserRepresentation from '@keycloak/keycloak-admin-client/lib/defs/userRepresentation';
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, BadRequestException } from '@nestjs/common';
 import { KeycloakProvider } from 'src/providers/keycloak/keycloak.provider';
 import { UserCreate, GenerateToken } from './dto/user.dto';
-import { UserRole, ClientType } from 'src/interfaces/enums';
+import { UserPlan, ClientType } from 'src/interfaces/enums';
 import { Credentials } from '@keycloak/keycloak-admin-client/lib/utils/auth';
 
 @Injectable()
@@ -17,13 +17,18 @@ export class UserService {
     async createUser(user: UserCreate) {
         try {
             await this.keycloak.generateMasterToken();
-            const kcUser = await this.keycloak.createUser(
-                this.formatUserCreate(user),
-            );
-
             const roleDetail = await this.keycloak.getClientRoleByName(
                 ClientType.USER,
-                user.clientRole,
+                user.plan,
+            );
+
+            if(!roleDetail){
+                throw new BadRequestException('Invalid Plan Name');
+            }
+
+
+            const kcUser = await this.keycloak.createUser(
+                this.formatUserCreate(user),
             );
 
             await this.keycloak.addClientLevelRoletoUser(
@@ -40,10 +45,10 @@ export class UserService {
     /**
      * @description Delete existing role of User and add new one
      * @param {string} userId User's Keycloak Id
-     * @param {UserRole} roleName Role name that need to be added to user
+     * @param {UserPlan} roleName Role name that need to be added to user
      * @returns {void} Void
      */
-    async updateUserRole(userId: string, roleName: UserRole) {
+    async updateUserRole(userId: string, roleName: UserPlan) {
         try {
             await this.keycloak.generateMasterToken();
             const roles = await this.keycloak.getUserClientLevelRoleById(

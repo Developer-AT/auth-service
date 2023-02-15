@@ -9,7 +9,7 @@ import { AccessBy } from 'src/decorators/access.decorator';
 export class AdminController {
     constructor(private readonly adminservice: AdminService) {}
 
-    @AccessBy(['admin'])
+    @AccessBy('admin')
     @GrpcMethod('AdminService', 'CreateAdmin')
     async CreateUser(
         payload: AdminCreate,

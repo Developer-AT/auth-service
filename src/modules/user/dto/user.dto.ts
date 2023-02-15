@@ -1,15 +1,15 @@
-import { UserRole } from 'src/interfaces/enums';
+import { UserPlan } from 'src/interfaces/enums';
 
 export interface UserCreate {
     username: string;
     password: string;
     email: string;
-    clientRole: string;
+    plan: UserPlan;
 }
 
 export interface UserUpdateRole {
     userId: string;
-    roleName: UserRole;
+    plan: UserPlan;
 }
 
 export interface GenerateToken {
