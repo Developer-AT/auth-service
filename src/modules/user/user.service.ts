@@ -1,5 +1,5 @@
 import UserRepresentation from '@keycloak/keycloak-admin-client/lib/defs/userRepresentation';
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, BadRequestException } from '@nestjs/common';
 import { KeycloakProvider } from 'src/providers/keycloak/keycloak.provider';
 import { UserCreate, GenerateToken } from './dto/user.dto';
 import { UserRole, ClientType } from 'src/interfaces/enums';
@@ -16,15 +16,24 @@ export class UserService {
      */
     async createUser(user: UserCreate) {
         try {
+            console.log('User--Service--createUser--user', user);
             await this.keycloak.generateMasterToken();
-            const kcUser = await this.keycloak.createUser(
-                this.formatUserCreate(user),
-            );
-
             const roleDetail = await this.keycloak.getClientRoleByName(
                 ClientType.USER,
                 user.clientRole,
             );
+
+            console.log('User--Service--createUser--roleDetail', roleDetail);
+
+            if (!roleDetail) {
+                throw new BadRequestException('Invalid Plan Name');
+            }
+
+            const kcUser = await this.keycloak.createUser(
+                this.formatUserCreate(user),
+            );
+
+            console.log('User--Service--createUser--kcUser', kcUser);
 
             await this.keycloak.addClientLevelRoletoUser(
                 kcUser.id,

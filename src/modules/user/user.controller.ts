@@ -1,12 +1,12 @@
-import { Controller, Get, UseGuards, HttpStatus } from '@nestjs/common';
-import { GrpcMethod, RpcException } from '@nestjs/microservices';
+import { Controller, UseGuards, HttpStatus } from '@nestjs/common';
+import { GrpcMethod } from '@nestjs/microservices';
 import { Metadata, ServerUnaryCall } from '@grpc/grpc-js';
 import { UserCreate, UserUpdateRole, GenerateToken } from './dto/user.dto';
 import { UserService } from './user.service';
 import { AccessBy } from 'src/decorators/access.decorator';
 import { MicroserviceGuard } from 'src/guards/microservice.guard';
 import { GlobalUtilsProvider } from 'src/providers/utils/global.utils.provider';
-import { HttpStatusMessage } from 'src/interfaces/enums';
+import { HttpStatusMessage, ClientType } from 'src/interfaces/enums';
 
 @Controller()
 export class UserController {
@@ -15,7 +15,7 @@ export class UserController {
         private readonly globalUtils: GlobalUtilsProvider,
     ) {}
 
-    @AccessBy(['user'])
+    @AccessBy(ClientType.USER)
     @UseGuards(MicroserviceGuard)
     @GrpcMethod('UserService', 'Create')
     async Create(
@@ -24,13 +24,18 @@ export class UserController {
         call: ServerUnaryCall<any, any>,
     ) {
         try {
-            return await this.userservice.createUser(payload);
+            const response = await this.userservice.createUser(payload);
+            return this.globalUtils.successResponse(
+                response,
+                HttpStatus.CREATED,
+                HttpStatusMessage.CREATED,
+            );
         } catch (error) {
             return this.globalUtils.GRpcErrorResponse(error);
         }
     }
 
-    @AccessBy(['user'])
+    @AccessBy(ClientType.USER)
     @UseGuards(MicroserviceGuard)
     @GrpcMethod('UserService', 'UpdateRole')
     async UpdateRole(
@@ -41,7 +46,7 @@ export class UserController {
         try {
             await this.userservice.updateUserRole(
                 payload.userId,
-                payload.roleName,
+                payload.clientRole,
             );
             return this.globalUtils.successResponse(
                 {},
@@ -53,7 +58,7 @@ export class UserController {
         }
     }
 
-    @AccessBy(['user'])
+    @AccessBy(ClientType.USER)
     @UseGuards(MicroserviceGuard)
     @GrpcMethod('UserService', 'GenerateToken')
     async GenerateToken(
@@ -62,6 +67,9 @@ export class UserController {
         call: ServerUnaryCall<any, any>,
     ) {
         try {
+            console.log('payload :: ', payload);
+            console.log(metadata);
+            // console.log(call);
             const token = await this.userservice.generateToken(payload);
             return this.globalUtils.successResponse({
                 token: token,

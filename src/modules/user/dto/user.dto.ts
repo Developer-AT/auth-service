@@ -4,12 +4,12 @@ export interface UserCreate {
     username: string;
     password: string;
     email: string;
-    clientRole: string;
+    clientRole: UserRole;
 }
 
 export interface UserUpdateRole {
     userId: string;
-    roleName: UserRole;
+    clientRole: UserRole;
 }
 
 export interface GenerateToken {

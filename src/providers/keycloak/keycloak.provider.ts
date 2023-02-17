@@ -72,6 +72,7 @@ export class KeycloakProvider {
         try {
             return await this.kcAdminClient.users.create(user);
         } catch (error) {
+            console.error('Keycloak--Provider--createUser--error', error);
             throw new KeyClockException(error);
         }
     }
