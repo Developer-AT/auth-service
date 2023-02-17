@@ -13,7 +13,12 @@ export class AuthService {
     ) {}
     async validate(data: AuthPayload) {
         try {
+            console.error('Auth--Service--validate--data', data);
             const decodedToken = await this.jwt.decodeToken(data.token);
+            console.error(
+                'Auth--Service--validate--decodedToken',
+                decodedToken,
+            );
             if (
                 !this.isTokenContainRequiredInfo(decodedToken, data.clientType)
             ) {
@@ -44,6 +49,7 @@ export class AuthService {
             const userId = decodedToken.sub;
             return userId;
         } catch (error) {
+            console.error('Auth--Service--validate--Error', error);
             throw error;
         }
     }

@@ -2,7 +2,7 @@ import UserRepresentation from '@keycloak/keycloak-admin-client/lib/defs/userRep
 import { Injectable, HttpException, BadRequestException } from '@nestjs/common';
 import { KeycloakProvider } from 'src/providers/keycloak/keycloak.provider';
 import { UserCreate, GenerateToken } from './dto/user.dto';
-import { UserPlan, ClientType } from 'src/interfaces/enums';
+import { UserRole, ClientType } from 'src/interfaces/enums';
 import { Credentials } from '@keycloak/keycloak-admin-client/lib/utils/auth';
 
 @Injectable()
@@ -16,20 +16,24 @@ export class UserService {
      */
     async createUser(user: UserCreate) {
         try {
+            console.log('User--Service--createUser--user', user);
             await this.keycloak.generateMasterToken();
             const roleDetail = await this.keycloak.getClientRoleByName(
                 ClientType.USER,
-                user.plan,
+                user.clientRole,
             );
 
-            if(!roleDetail){
+            console.log('User--Service--createUser--roleDetail', roleDetail);
+
+            if (!roleDetail) {
                 throw new BadRequestException('Invalid Plan Name');
             }
-
 
             const kcUser = await this.keycloak.createUser(
                 this.formatUserCreate(user),
             );
+
+            console.log('User--Service--createUser--kcUser', kcUser);
 
             await this.keycloak.addClientLevelRoletoUser(
                 kcUser.id,
@@ -45,10 +49,10 @@ export class UserService {
     /**
      * @description Delete existing role of User and add new one
      * @param {string} userId User's Keycloak Id
-     * @param {UserPlan} roleName Role name that need to be added to user
+     * @param {UserRole} roleName Role name that need to be added to user
      * @returns {void} Void
      */
-    async updateUserRole(userId: string, roleName: UserPlan) {
+    async updateUserRole(userId: string, roleName: UserRole) {
         try {
             await this.keycloak.generateMasterToken();
             const roles = await this.keycloak.getUserClientLevelRoleById(

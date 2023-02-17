@@ -110,7 +110,7 @@ export class JwtProvider {
             const decodeOptions: DecodeOptions = {
                 json: true,
             };
-            return <JwtPayload>decode(token, decodeOptions);
+            return await (<JwtPayload>decode(token, decodeOptions));
         } catch (error) {
             throw new JwtException(error);
         }

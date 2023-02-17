@@ -9,7 +9,7 @@ export enum AdminRole {
     SUB_ADMIN = 'sub-admin',
 }
 
-export enum UserPlan {
+export enum UserRole {
     GOLD = 'gold',
     SILVER = 'silver',
     BRONZE = 'bronze',
