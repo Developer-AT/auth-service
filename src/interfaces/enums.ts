@@ -1,6 +1,6 @@
 export enum ServiceType {
     AUTH = 'auth',
-    BOOK = 'book',
+    PRODUCT = 'product',
     USER = 'user',
 }
 
