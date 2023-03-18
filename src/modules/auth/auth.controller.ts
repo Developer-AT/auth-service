@@ -1,4 +1,4 @@
-import { ClientType } from 'src/interfaces/enums';
+import { ServiceType } from 'src/interfaces/enums';
 import { Empty, HttpResponse } from 'src/interfaces/global.interface';
 import { AuthService } from './auth.service';
 import { Controller, UseGuards } from '@nestjs/common';
@@ -16,9 +16,9 @@ export class AuthController {
         private readonly globalUtils: GlobalUtilsProvider,
     ) {}
 
-    @AccessBy(ClientType.USER)
-    @UseGuards(MicroserviceGuard)
     @GrpcMethod('AuthService', 'Validate')
+    @AccessBy(ServiceType.USER, ServiceType.PRODUCT)
+    @UseGuards(MicroserviceGuard)
     async Validate(
         payload: AuthPayload,
         metadata: Metadata,

@@ -46,6 +46,7 @@ export class MicroserviceGuard implements CanActivate {
                 'accessBy',
                 context.getHandler(),
             );
+            console.log('Guard--canActivate--tokenPayload', tokenPayload);
             if (accessBy.indexOf(tokenPayload.service) < 0) {
                 throw new ForbiddenException('Access not Granted');
             }
