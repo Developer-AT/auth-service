@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { GlobalUtilsProvider } from './global.utils.provider';
+import { ResponseUtilsProvider } from './response.utils.provider';
 
 @Module({
     imports: [],
-    providers: [GlobalUtilsProvider],
-    exports: [GlobalUtilsProvider],
+    providers: [ResponseUtilsProvider],
+    exports: [ResponseUtilsProvider],
 })
 export class UtilsModule {}

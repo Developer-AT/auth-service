@@ -4,7 +4,7 @@ import { AcceptAny } from 'src/interfaces/types';
 import { HttpResponse } from 'src/interfaces/global.interface';
 
 @Injectable()
-export class GlobalUtilsProvider {
+export class ResponseUtilsProvider {
     /**
      * @description Construct Success Response Object
      * @param {Record<string, AcceptAny>} data Actual Data to be Provided in Response
@@ -34,7 +34,7 @@ export class GlobalUtilsProvider {
      * @param {string} statusMsg Status Msg for Response
      * @returns {HttpResponse} Error Response Object
      */
-    GRpcErrorResponse(
+    errorResponse(
         error: HttpException,
         status: HttpStatus = HttpStatus.BAD_REQUEST,
         statusMsg: HttpStatusMessage = HttpStatusMessage.BAD_REQUEST,

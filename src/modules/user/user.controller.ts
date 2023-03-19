@@ -5,14 +5,14 @@ import { UserCreate, UserUpdateRole, GenerateToken } from './dto/user.dto';
 import { UserService } from './user.service';
 import { AccessBy } from 'src/decorators/access.decorator';
 import { MicroserviceGuard } from 'src/guards/microservice.guard';
-import { GlobalUtilsProvider } from 'src/providers/utils/global.utils.provider';
+import { ResponseUtilsProvider } from 'src/providers/utils/response.utils.provider';
 import { HttpStatusMessage, ClientType } from 'src/interfaces/enums';
 
 @Controller()
 export class UserController {
     constructor(
         private readonly userservice: UserService,
-        private readonly globalUtils: GlobalUtilsProvider,
+        private readonly responseUtils: ResponseUtilsProvider,
     ) {}
 
     @AccessBy(ClientType.USER)
@@ -25,13 +25,13 @@ export class UserController {
     ) {
         try {
             const response = await this.userservice.createUser(payload);
-            return this.globalUtils.successResponse(
+            return this.responseUtils.successResponse(
                 response,
                 HttpStatus.CREATED,
                 HttpStatusMessage.CREATED,
             );
         } catch (error) {
-            return this.globalUtils.GRpcErrorResponse(error);
+            return this.responseUtils.errorResponse(error);
         }
     }
 
@@ -48,13 +48,13 @@ export class UserController {
                 payload.userId,
                 payload.clientRole,
             );
-            return this.globalUtils.successResponse(
+            return this.responseUtils.successResponse(
                 {},
                 HttpStatus.ACCEPTED,
                 HttpStatusMessage.ACCEPTED,
             );
         } catch (error) {
-            return this.globalUtils.GRpcErrorResponse(error);
+            return this.responseUtils.errorResponse(error);
         }
     }
 
@@ -71,12 +71,12 @@ export class UserController {
             console.log(metadata);
             // console.log(call);
             const token = await this.userservice.generateToken(payload);
-            return this.globalUtils.successResponse({
+            return this.responseUtils.successResponse({
                 token: token,
             });
         } catch (error) {
             console.error('User--GenerateToken--Error--', error);
-            return this.globalUtils.GRpcErrorResponse(error);
+            return this.responseUtils.errorResponse(error);
         }
     }
 }
