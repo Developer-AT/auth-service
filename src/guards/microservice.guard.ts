@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { Metadata, MetadataValue } from '@grpc/grpc-js';
 import { JwtProvider } from 'src/providers/jwt/jwt.provider';
-import { GlobalUtilsProvider } from 'src/providers/utils/global.utils.provider';
 import {
     HttpStatusMessage,
     ServiceType,
@@ -22,7 +21,6 @@ export class MicroserviceGuard implements CanActivate {
     constructor(
         private reflector: Reflector,
         private readonly jwt: JwtProvider,
-        private readonly globalUtils: GlobalUtilsProvider,
     ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -46,6 +44,7 @@ export class MicroserviceGuard implements CanActivate {
                 'accessBy',
                 context.getHandler(),
             );
+            console.log('Guard--canActivate--tokenPayload', tokenPayload);
             if (accessBy.indexOf(tokenPayload.service) < 0) {
                 throw new ForbiddenException('Access not Granted');
             }

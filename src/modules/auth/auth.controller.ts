@@ -1,11 +1,11 @@
-import { ClientType } from 'src/interfaces/enums';
+import { ServiceType } from 'src/interfaces/enums';
 import { Empty, HttpResponse } from 'src/interfaces/global.interface';
 import { AuthService } from './auth.service';
 import { Controller, UseGuards } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { Metadata, ServerUnaryCall } from '@grpc/grpc-js';
 import { AuthPayload, AuthResponse } from './dto/auth.dto';
-import { GlobalUtilsProvider } from 'src/providers/utils/global.utils.provider';
+import { ResponseUtilsProvider } from 'src/providers/utils/response.utils.provider';
 import { AccessBy } from 'src/decorators/access.decorator';
 import { MicroserviceGuard } from 'src/guards/microservice.guard';
 
@@ -13,12 +13,12 @@ import { MicroserviceGuard } from 'src/guards/microservice.guard';
 export class AuthController {
     constructor(
         private readonly authservice: AuthService,
-        private readonly globalUtils: GlobalUtilsProvider,
+        private readonly responseUtils: ResponseUtilsProvider,
     ) {}
 
-    @AccessBy(ClientType.USER)
-    @UseGuards(MicroserviceGuard)
     @GrpcMethod('AuthService', 'Validate')
+    @AccessBy(ServiceType.USER, ServiceType.PRODUCT)
+    @UseGuards(MicroserviceGuard)
     async Validate(
         payload: AuthPayload,
         metadata: Metadata,
@@ -26,12 +26,12 @@ export class AuthController {
     ) {
         try {
             console.log('payload :: ', payload);
-            return this.globalUtils.successResponse({
-                userId: await this.authservice.validate(payload),
+            return this.responseUtils.successResponse({
+                userKeycloakId: await this.authservice.validate(payload),
             });
         } catch (error) {
             console.error('Auth--Controller--Validate--Error', error);
-            return this.globalUtils.GRpcErrorResponse(error);
+            return this.responseUtils.errorResponse(error);
         }
     }
 
@@ -42,11 +42,11 @@ export class AuthController {
         call: ServerUnaryCall<any, any>,
     ) {
         try {
-            return this.globalUtils.successResponse({
+            return this.responseUtils.successResponse({
                 token: await this.authservice.authMicroserviceServiceToken(),
             });
         } catch (error) {
-            return this.globalUtils.GRpcErrorResponse(error);
+            return this.responseUtils.errorResponse(error);
         }
     }
 }
